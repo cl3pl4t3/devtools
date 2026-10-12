@@ -6,10 +6,10 @@ J'ai quand même relu chaque case sur les PNG finaux : nombre de pièces, prése
 | Produit | Attendu (pièces) | Ordre attendu, de bas en haut | Constaté sur la fiche | Résultat |
 |---|---|---|---|---|
 | Kid | 1 cornichon, 1 steak, 1 cheddar | pain → ketchup → cornichon → steak → cheddar → pain | identique : mêmes pièces, même ordre, numérotation 1→6 | ✅ OK |
-| Simple | 1 cornichon, 1 steak, 1 cheddar | pain → biggy → cornichon → steak → cheddar → salade → pain | identique : mêmes pièces, même ordre, numérotation 1→7 | ✅ OK |
-| Double | 2 cornichons, 2 steaks, 2 cheddars | pain → biggy → cornichon → steak → cheddar → steak → cheddar → salade → pain | identique : mêmes pièces, même ordre, numérotation 1→9 | ✅ OK |
-| Triple | 3 cornichons, 3 steaks, 3 cheddars | pain → biggy → cornichon → steak → cheddar → steak → cheddar → steak → cheddar → salade → pain | identique : mêmes pièces, même ordre, numérotation 1→11 | ✅ OK |
-| Suprême | 4 cornichons, 4 steaks, 4 cheddars | pain → biggy → cornichon → steak → cheddar → steak → cheddar → steak → cheddar → steak → cheddar → salade → pain | identique : mêmes pièces, même ordre, numérotation 1→13 | ✅ OK |
+| Simple | 1 cornichon, 1 steak, 1 cheddar | pain → biggy → cornichon → steak → cheddar → salade → biggy → pain | identique : mêmes pièces, même ordre, numérotation 1→8 | ✅ OK |
+| Double | 2 cornichons, 2 steaks, 2 cheddars | pain → biggy → cornichon → steak → cheddar → steak → cheddar → salade → biggy → pain | identique : mêmes pièces, même ordre, numérotation 1→10 | ✅ OK |
+| Triple | 3 cornichons, 3 steaks, 3 cheddars | pain → biggy → cornichon → steak → cheddar → steak → cheddar → steak → cheddar → salade → biggy → pain | identique : mêmes pièces, même ordre, numérotation 1→12 | ✅ OK |
+| Suprême | 4 cornichons, 4 steaks, 4 cheddars | pain → biggy → cornichon → steak → cheddar → steak → cheddar → steak → cheddar → steak → cheddar → salade → biggy → pain | identique : mêmes pièces, même ordre, numérotation 1→14 | ✅ OK |
 | Pepper | 2 steaks, 2 cheddars | pain → pepper → steak → cheddar → steak → cheddar → salade → biggy → pain | identique : mêmes pièces, même ordre, numérotation 1→9 | ✅ OK |
 | Spicy | 2 steaks, 2 cheddars | pain → spicy → oignons rouges → steak → cheddar → steak → cheddar → salade → biggy → pain | identique : mêmes pièces, même ordre, numérotation 1→10 | ✅ OK |
 | BBQ | 2 steaks, 2 cheddars | pain → bbq → steak → cheddar → steak → cheddar → ½ bacon → oignons caramélisés → salade → biggy → pain | identique : mêmes pièces, même ordre, numérotation 1→11 | ✅ OK |

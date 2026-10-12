@@ -81,11 +81,15 @@
           "quantite": 1
         },
         {
+          "ingredient": "sauce biggy (sous le pain du haut)",
+          "quantite": 1
+        },
+        {
           "ingredient": "pain burger (haut)",
           "quantite": 1
         }
       ],
-      "legende": "Biggy · cornichon · 1 steak · cheddar · salade"
+      "legende": "Biggy · cornichon · 1 steak · cheddar · salade · biggy"
     },
     {
       "numero": 3,
@@ -125,11 +129,15 @@
           "quantite": 1
         },
         {
+          "ingredient": "sauce biggy (sous le pain du haut)",
+          "quantite": 1
+        },
+        {
           "ingredient": "pain burger (haut)",
           "quantite": 1
         }
       ],
-      "legende": "Biggy · 2 cornichons · 2 steaks · 2 cheddars · salade"
+      "legende": "Biggy · 2 cornichons · 2 steaks · 2 cheddars · salade · biggy"
     },
     {
       "numero": 4,
@@ -177,11 +185,15 @@
           "quantite": 1
         },
         {
+          "ingredient": "sauce biggy (sous le pain du haut)",
+          "quantite": 1
+        },
+        {
           "ingredient": "pain burger (haut)",
           "quantite": 1
         }
       ],
-      "legende": "Biggy · 3 cornichons · 3 steaks · 3 cheddars · salade"
+      "legende": "Biggy · 3 cornichons · 3 steaks · 3 cheddars · salade · biggy"
     },
     {
       "numero": 5,
@@ -237,11 +249,15 @@
           "quantite": 1
         },
         {
+          "ingredient": "sauce biggy (sous le pain du haut)",
+          "quantite": 1
+        },
+        {
           "ingredient": "pain burger (haut)",
           "quantite": 1
         }
       ],
-      "legende": "Biggy · 4 cornichons · 4 steaks · 4 cheddars · salade"
+      "legende": "Biggy · 4 cornichons · 4 steaks · 4 cheddars · salade · biggy"
     },
     {
       "numero": 6,
