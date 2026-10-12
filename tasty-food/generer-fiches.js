@@ -1,10 +1,14 @@
-// Génère les fiches techniques A3 paysage (burgers + sandwichs) à partir de data/recettes.json.
-// Style « vue éclatée » : chaque couche est dessinée séparément, de bas en haut, avec son nom à gauche.
-// Usage : node generer-fiches.js   →  sortie/fiche-burgers.(png|pdf), sortie/fiche-sandwichs.(png|pdf)
+// Génère les 2 visuels « fiches techniques » A3 paysage à partir de data/recettes.json :
+//   sortie/fiche-burgers.(png|pdf) et sortie/fiche-sandwichs.(png|pdf)
+// Chaque colonne : nom du produit, montage en vue éclatée numéroté de bas en haut, puis le produit monté.
+// Usage : node generer-fiches.js
 
 const fs = require('fs')
 const path = require('path')
 const { chromium } = require('playwright')
+const { semer, f, couchesDe } = require('./lib/commun')
+const ECLATE = require('./lib/eclate')
+const PROFIL = require('./lib/profil')
 
 const ICI = __dirname
 const SORTIE = path.join(ICI, 'sortie')
@@ -14,354 +18,217 @@ const recettes = JSON.parse(fs.readFileSync(path.join(ICI, 'data', 'recettes.jso
 const PAGE_L = 1587
 const PAGE_H = 1123
 const ECHELLE_PNG = 3.125
+const JAUNE = '#FFC20E'
 
-const COULEURS = {
-    'sauce biggy': '#D9B77E',
-    'sauce pepper': '#D6C09A',
-    'sauce spicy': '#E8562A',
-    'sauce bbq': '#4A2414',
-    ketchup: '#C8201E',
+const DEFS = `<defs>
+  <linearGradient id="croute" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ECB25C"/><stop offset="1" stop-color="#B26A26"/></linearGradient>
+  <linearGradient id="brioche" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#EBAA52"/><stop offset="1" stop-color="#B26A26"/></linearGradient>
+  <linearGradient id="viande" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7A4528"/><stop offset="1" stop-color="#3E2112"/></linearGradient>
+  <linearGradient id="pane" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#EDB65A"/><stop offset="1" stop-color="#C47F25"/></linearGradient>
+  <filter id="ombre" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="1.5" stdDeviation="1.2" flood-opacity=".35"/></filter>
+  <radialGradient id="halo" cx=".5" cy=".62" r=".6"><stop offset="0" stop-color="#FF8A1E" stop-opacity=".38"/><stop offset=".55" stop-color="#FF6A00" stop-opacity=".1"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
+</defs>`
+
+// Type de dessin « produit monté » correspondant à une couche
+function typeProfil(c, baguette) {
+    if (c.t === 'painBas') return baguette ? 'painSandwichBas' : 'painBurgerBas'
+    if (c.t === 'painHaut') return baguette ? 'painSandwichHaut' : 'painBurgerHaut'
+    if (c.t === 'pieces') return c.nom === 'jalapeño' ? 'jalapeno' : 'cornichon'
+    return c.t
 }
 
-// ---------- utilitaires ----------
-let graine = 1
-const alea = () => {
-    graine = (graine * 16807) % 2147483647
-    return (graine - 1) / 2147483646
-}
-const f = (n) => Math.round(n * 10) / 10
-
-// Disque épais vu en légère plongée (steak, tranche…)
-function cylindre(cx, cy, rx, ry, ep, dessus, cote, trait) {
-    const y0 = cy - ep / 2
-    return `<path d="M${f(cx - rx)},${f(y0)} V${f(y0 + ep)} A${f(rx)},${f(ry)} 0 0 0 ${f(cx + rx)},${f(y0 + ep)} V${f(y0)} Z" fill="${cote}" stroke="${trait}" stroke-width="1"/>
-            <ellipse cx="${f(cx)}" cy="${f(y0)}" rx="${f(rx)}" ry="${f(ry)}" fill="${dessus}" stroke="${trait}" stroke-width="1"/>`
+function hauteurProfil(couches, baguette) {
+    let h = couches.reduce((s, c) => s + PROFIL[typeProfil(c, baguette)].h + 1.5, 0)
+    if (couches[0].t === 'galette') h += PROFIL.galette.h + 4
+    return h
 }
 
-// Contour ondulé autour d'une ellipse (salade, sauce…)
-function contourOndule(cx, cy, rx, ry, n, amp) {
-    let d = ''
-    for (let i = 0; i <= n * 2; i++) {
-        const a = (Math.PI * i) / n
-        const k = i % 2 ? 1 + amp : 1 - amp * 0.3
-        d += `${i ? 'L' : 'M'}${f(cx + Math.cos(a) * rx * k)},${f(cy + Math.sin(a) * ry * k)} `
-    }
-    return d + 'Z'
-}
-
-// ---------- dessin de chaque couche ----------
-// Chaque fonction reçoit cx, cy (centre), W (largeur de référence), s (hauteur d'une couche), q (quantité), nom.
-const DESSINS = {
-    painBas: (cx, cy, W, s) => {
-        const rx = W / 2, ry = s * 0.2, ep = s * 0.42, y0 = cy - ep / 3
-        return `<path d="M${f(cx - rx)},${f(y0)} C${f(cx - rx)},${f(y0 + ep * 1.25)} ${f(cx + rx)},${f(y0 + ep * 1.25)} ${f(cx + rx)},${f(y0)} Z" fill="url(#croute)" stroke="#8A5520" stroke-width="1"/>
-                <ellipse cx="${f(cx)}" cy="${f(y0)}" rx="${f(rx)}" ry="${f(ry)}" fill="#F7E3BC" stroke="#C9974F" stroke-width="1"/>`
-    },
-    painHaut: (cx, cy, W, s, q, nom, baguette) => {
-        const rx = W / 2, ry = s * 0.16, hd = baguette ? s * 0.62 : s * 0.85, yb = cy + s * 0.18
-        let o = `<ellipse cx="${f(cx)}" cy="${f(yb)}" rx="${f(rx)}" ry="${f(ry)}" fill="#F7E3BC" stroke="#C9974F" stroke-width="1"/>
-                 <path d="M${f(cx - rx)},${f(yb)} C${f(cx - rx)},${f(yb - hd * 1.3)} ${f(cx + rx)},${f(yb - hd * 1.3)} ${f(cx + rx)},${f(yb)} A${f(rx)},${f(ry)} 0 0 1 ${f(cx - rx)},${f(yb)} Z" fill="url(#croute)" stroke="#8A5520" stroke-width="1"/>`
-        if (baguette)
-            for (let i = 1; i <= 4; i++) {
-                const x = cx - rx + (W * i) / 5
-                o += `<path d="M${f(x - 13)},${f(yb - hd * 0.45)} Q${f(x)},${f(yb - hd * 1.0)} ${f(x + 13)},${f(yb - hd * 0.75)}" stroke="#F0D29A" stroke-width="3" fill="none" stroke-linecap="round"/>`
-            }
-        else o += `<ellipse cx="${f(cx - W * 0.12)}" cy="${f(yb - hd * 0.62)}" rx="${f(W * 0.17)}" ry="${f(hd * 0.12)}" fill="#fff" opacity=".35"/>`
-        return o
-    },
-    sauce: (cx, cy, W, s, q, nom) => {
-        const c = COULEURS[nom]
-        let o = `<path d="${contourOndule(cx, cy, W * 0.36, s * 0.2, 9, 0.12)}" fill="${c}" stroke="rgba(0,0,0,.3)" stroke-width=".8"/>`
-        o += `<ellipse cx="${f(cx - W * 0.08)}" cy="${f(cy - s * 0.05)}" rx="${f(W * 0.12)}" ry="${f(s * 0.05)}" fill="#fff" opacity=".3"/>`
-        if (nom === 'sauce pepper')
-            for (let i = 0; i < 30; i++) {
-                const a = alea() * Math.PI * 2, r = Math.sqrt(alea())
-                o += `<circle cx="${f(cx + Math.cos(a) * r * W * 0.32)}" cy="${f(cy + Math.sin(a) * r * s * 0.16)}" r="1" fill="#151515"/>`
-            }
-        return o
-    },
-    pieces: (cx, cy, W, s, q, nom) => {
-        // cornichons et jalapeños : q rondelles bien séparées, faciles à compter
-        const jal = nom === 'jalapeño'
-        const zone = W * 0.86
-        const pas = zone / q
-        const rx = Math.min(pas / 2 - 3, 16), ry = Math.min(s * 0.17, rx * 0.55)
-        let o = ''
-        for (let i = 0; i < q; i++) {
-            const x = cx - zone / 2 + pas * (i + 0.5)
-            const y = cy + (q > 3 ? (i % 2 ? -s * 0.1 : s * 0.1) : 0)
-            o += `<ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(rx)}" ry="${f(ry)}" fill="${jal ? '#3E7D1E' : '#5C8A2E'}" stroke="${jal ? '#1E4A0C' : '#2F4F14'}" stroke-width="1.2"/>
-                  <ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(rx * 0.68)}" ry="${f(ry * 0.6)}" fill="${jal ? '#DCE9A8' : '#BFD472'}"/>`
-            if (jal) o += `<circle cx="${f(x - 2.5)}" cy="${f(y)}" r="1.1" fill="#fff"/><circle cx="${f(x + 2.5)}" cy="${f(y)}" r="1.1" fill="#fff"/>`
-            else o += `<circle cx="${f(x)}" cy="${f(y)}" r="1.4" fill="#7FA43C"/>`
-        }
-        return o
-    },
-    steak: (cx, cy, W, s) => {
-        const rx = W * 0.46, ry = s * 0.2
-        let o = cylindre(cx, cy, rx, ry, s * 0.34, '#6E3C22', '#45230F', '#2A140A')
-        const yt = cy - s * 0.17
-        for (let i = 0; i < 26; i++) {
-            const a = alea() * Math.PI * 2, r = Math.sqrt(alea()) * 0.85
-            o += `<circle cx="${f(cx + Math.cos(a) * r * rx)}" cy="${f(yt + Math.sin(a) * r * ry)}" r="${f(0.8 + alea())}" fill="${alea() > 0.5 ? '#3B1C0C' : '#94583A'}"/>`
-        }
-        return o
-    },
-    cheddar: (cx, cy, W, s) => {
-        // tranche carrée vue en plongée, coins qui fondent
-        const a = W * 0.44, b = s * 0.24
-        return `<path d="M${f(cx - a)},${f(cy)} L${f(cx)},${f(cy - b)} L${f(cx + a)},${f(cy)} L${f(cx)},${f(cy + b)} Z" fill="#F5A81C" stroke="#C47A06" stroke-width="1"/>
-                <path d="M${f(cx - a)},${f(cy)} Q${f(cx - a - 2)},${f(cy + 8)} ${f(cx - a + 6)},${f(cy + 7)} L${f(cx - a + 9)},${f(cy + 2)} Z" fill="#F5A81C" stroke="#C47A06" stroke-width=".8"/>
-                <path d="M${f(cx + a)},${f(cy)} Q${f(cx + a + 2)},${f(cy + 9)} ${f(cx + a - 6)},${f(cy + 8)} L${f(cx + a - 9)},${f(cy + 2)} Z" fill="#F5A81C" stroke="#C47A06" stroke-width=".8"/>
-                <path d="M${f(cx - a * 0.5)},${f(cy - b * 0.3)} L${f(cx)},${f(cy - b * 0.8)}" stroke="#FFD27A" stroke-width="2" stroke-linecap="round"/>`
-    },
-    salade: (cx, cy, W, s) => {
-        const rx = W * 0.44, ry = s * 0.26
-        let o = `<path d="${contourOndule(cx, cy, rx, ry, 14, 0.1)}" fill="#7DBE3A" stroke="#3E7A17" stroke-width="1"/>`
-        o += `<path d="M${f(cx - rx * 0.75)},${f(cy)} H${f(cx + rx * 0.75)}" stroke="#D2EBA6" stroke-width="1.6"/>`
-        for (let i = -3; i <= 3; i++) o += `<path d="M${f(cx + i * rx * 0.2)},${f(cy)} l${f(rx * 0.08)},${f(-ry * 0.6)} M${f(cx + i * rx * 0.2)},${f(cy)} l${f(rx * 0.08)},${f(ry * 0.6)}" stroke="#B9DE85" stroke-width="1"/>`
-        return o
-    },
-    oignonsRouges: (cx, cy, W, s) => {
-        let o = ''
-        const n = 6
-        for (let i = 0; i < n; i++) {
-            const x = cx - W * 0.36 + (W * 0.72 * i) / (n - 1)
-            const y = cy + (i % 2 ? -s * 0.09 : s * 0.09)
-            o += `<ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(W * 0.075)}" ry="${f(s * 0.12)}" fill="none" stroke="#8E2D6E" stroke-width="3"/>
-                  <ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(W * 0.075)}" ry="${f(s * 0.12)}" fill="none" stroke="#F1D2E6" stroke-width="1"/>`
-        }
-        return o
-    },
-    oignonsCaramelises: (cx, cy, W, s) => {
-        let o = `<ellipse cx="${f(cx)}" cy="${f(cy)}" rx="${f(W * 0.38)}" ry="${f(s * 0.17)}" fill="#C27A35" stroke="#7A3A10" stroke-width=".8"/>`
-        for (let i = 0; i < 14; i++) {
-            const x = cx - W * 0.32 + alea() * W * 0.5
-            const y = cy - s * 0.1 + alea() * s * 0.2
-            o += `<path d="M${f(x)},${f(y)} q5,-4 9,0 t9,0" stroke="#6E300C" stroke-width="1.6" fill="none" stroke-linecap="round"/>`
-        }
-        return o
-    },
-    oignonsFrits: (cx, cy, W, s) => {
-        let o = ''
-        for (let i = 0; i < 34; i++) {
-            const a = alea() * Math.PI * 2, r = Math.sqrt(alea())
-            o += `<ellipse cx="${f(cx + Math.cos(a) * r * W * 0.36)}" cy="${f(cy + Math.sin(a) * r * s * 0.18)}" rx="${f(2.5 + alea() * 2)}" ry="2" fill="${alea() > 0.5 ? '#C98A2B' : '#E5B552'}" stroke="#8A5A12" stroke-width=".5"/>`
-        }
-        return o
-    },
-    bacon: (cx, cy, W, s) => {
-        // une demi-tranche : une seule bande ondulée, plus courte qu'un steak
-        const l = W * 0.5, x0 = cx - l / 2, e = s * 0.2
-        let d = `M${f(x0)},${f(cy - e / 2)}`
-        for (let i = 1; i <= 5; i++) d += ` Q${f(x0 + (l * (i - 0.5)) / 5)},${f(cy - e / 2 + (i % 2 ? -4 : 4))} ${f(x0 + (l * i) / 5)},${f(cy - e / 2)}`
-        d += ` V${f(cy + e / 2)}`
-        for (let i = 4; i >= 0; i--) d += ` Q${f(x0 + (l * (i + 0.5)) / 5)},${f(cy + e / 2 + (i % 2 ? 4 : -4))} ${f(x0 + (l * i) / 5)},${f(cy + e / 2)}`
-        return `<path d="${d} Z" fill="#B33A2E" stroke="#6E1A12" stroke-width="1"/>
-                <path d="M${f(x0 + 3)},${f(cy)} H${f(x0 + l - 3)}" stroke="#F3D3C2" stroke-width="1.8"/>`
-    },
-    tender: (cx, cy, W, s, q) => {
-        let o = ''
-        const l = q > 1 ? W * 0.42 : W * 0.6, h = s * 0.36, gap = W * 0.06
-        const total = q * l + (q - 1) * gap
-        for (let i = 0; i < q; i++) {
-            const x = cx - total / 2 + i * (l + gap)
-            o += `<rect x="${f(x)}" y="${f(cy - h / 2)}" width="${f(l)}" height="${f(h)}" rx="${f(h / 2)}" fill="url(#pane)" stroke="#8A5410" stroke-width="1"/>`
-            for (let k = 0; k < 16; k++) o += `<circle cx="${f(x + 5 + alea() * (l - 10))}" cy="${f(cy - h / 2 + 3 + alea() * (h - 6))}" r="1.1" fill="#A8661A" opacity=".85"/>`
-        }
-        return o
-    },
-    tenderSmashe: (cx, cy, W, s) => {
-        let o = cylindre(cx, cy, W * 0.45, s * 0.22, s * 0.16, 'url(#pane)', '#B5731F', '#8A5410')
-        for (let k = 0; k < 30; k++) {
-            const a = alea() * Math.PI * 2, r = Math.sqrt(alea()) * 0.85
-            o += `<circle cx="${f(cx + Math.cos(a) * r * W * 0.45)}" cy="${f(cy - s * 0.08 + Math.sin(a) * r * s * 0.22)}" r="1.1" fill="#A8661A"/>`
-        }
-        return o
-    },
-    galette: (cx, cy, W, s) => {
-        let o = `<ellipse cx="${f(cx)}" cy="${f(cy)}" rx="${f(W * 0.52)}" ry="${f(s * 0.28)}" fill="#F1DEB0" stroke="#B58F4E" stroke-width="1.2"/>`
-        for (let k = 0; k < 12; k++) {
-            const a = alea() * Math.PI * 2, r = Math.sqrt(alea()) * 0.85
-            o += `<ellipse cx="${f(cx + Math.cos(a) * r * W * 0.5)}" cy="${f(cy + Math.sin(a) * r * s * 0.26)}" rx="3" ry="1.5" fill="#C08A3E" opacity=".7"/>`
-        }
-        return o
-    },
-}
-
-// Associe chaque ingrédient de la fiche à un dessin et à une étiquette courte
-function decrire(ingredient, q, numero) {
-    if (ingredient.endsWith('(bas)')) return { t: 'painBas', e: 'Pain du bas' }
-    if (ingredient.endsWith('(haut)')) return { t: 'painHaut', e: 'Pain du haut' }
-    if (ingredient.startsWith('galette')) return { t: 'galette', e: 'Galette fajitas' }
-    if (ingredient.startsWith('sauce') || ingredient === 'ketchup') {
-        const nom = ingredient.replace(/ \(.*/, '')
-        const noms = { ketchup: 'Ketchup', 'sauce biggy': 'Sauce Biggy', 'sauce pepper': 'Sauce Pepper', 'sauce spicy': 'Sauce Spicy', 'sauce bbq': 'Sauce BBQ' }
-        return { t: 'sauce', nom, e: noms[nom] }
-    }
-    if (ingredient === 'cornichon') return { t: 'pieces', nom: 'cornichon', e: `${q} cornichon${q > 1 ? 's' : ''}`, fort: 1 }
-    if (ingredient === 'jalapeño') return { t: 'pieces', nom: 'jalapeño', e: `${q} jalapeños`, fort: 1 }
-    if (ingredient === 'steak') return { t: 'steak', e: 'Steak' + numero, fort: 1 }
-    if (ingredient === 'cheddar') return { t: 'cheddar', e: 'Cheddar' + numero }
-    if (ingredient === 'feuille de salade') return { t: 'salade', e: '1 feuille salade' }
-    if (ingredient === 'oignons rouges') return { t: 'oignonsRouges', e: 'Oignons rouges' }
-    if (ingredient === 'oignons caramélisés') return { t: 'oignonsCaramelises', e: 'Oignons caramélisés' }
-    if (ingredient === 'oignons frits') return { t: 'oignonsFrits', e: 'Oignons frits' }
-    if (ingredient.includes('bacon')) return { t: 'bacon', e: '½ bacon américain', fort: 1 }
-    if (ingredient.startsWith('tender smashé')) return { t: 'tenderSmashe', e: 'Tender smashé', fort: 1 }
-    if (ingredient === 'tender') return { t: 'tender', e: q > 1 ? `${q} tenders` : '1 tender', fort: 1 }
-    throw new Error('Ingrédient sans dessin : ' + ingredient)
-}
-
-function couchesDe(produit) {
-    const total = {}
-    for (const c of produit.couches_bas_vers_haut) total[c.ingredient] = (total[c.ingredient] || 0) + 1
-    const compteur = {}
-    return produit.couches_bas_vers_haut.map((c) => {
-        compteur[c.ingredient] = (compteur[c.ingredient] || 0) + 1
-        const numero = total[c.ingredient] > 1 ? ' ' + compteur[c.ingredient] : ''
-        return { ...decrire(c.ingredient, c.quantite, numero), q: c.quantite }
-    })
-}
-
-// Coupe une étiquette trop longue en deux lignes
-function lignes(texte, max) {
-    if (texte.length <= max) return [texte]
-    const i = texte.lastIndexOf(' ', max)
-    return i > 0 ? [texte.slice(0, i), texte.slice(i + 1)] : [texte]
-}
-
-function dessinerProduit(produit, svgH, o) {
-    graine = produit.numero * 97 + (o.baguette ? 13 : 0)
+// Produit monté, vu de profil, posé sur yBas
+function dessinerMonte(produit, cx, yBas, W, k, baguette) {
+    semer(produit.numero * 31 + 7)
     const couches = couchesDe(produit)
-    const s = o.pas
+    let y = yBas
+    let svg = ''
+    for (const c of couches) {
+        const D = PROFIL[typeProfil(c, baguette)]
+        const w = W * D.l
+        y -= D.h * k
+        svg += `<g transform="translate(0 ${f(y)}) scale(1 ${k}) translate(0 ${-y})">${D.svg(cx - w / 2, y, w, D.h, c.q, c.nom)}</g>`
+        y -= 1.5 * k
+    }
+    if (couches[0].t === 'galette') {
+        // wrap : galette repliée par-dessus, vue en coupe
+        const D = PROFIL.galette
+        const w = W * D.l
+        const x = cx - w / 2
+        y -= 2 * k
+        const yHaut = y - D.h * k
+        svg = `<path d="M${f(x + 6)},${f(yBas)} Q${f(x - 10)},${f(yBas)} ${f(x - 10)},${f((yBas + yHaut) / 2)} Q${f(x - 10)},${f(yHaut)} ${f(x + 6)},${f(yHaut)}
+                     M${f(x + w - 6)},${f(yBas)} Q${f(x + w + 10)},${f(yBas)} ${f(x + w + 10)},${f((yBas + yHaut) / 2)} Q${f(x + w + 10)},${f(yHaut)} ${f(x + w - 6)},${f(yHaut)}"
+                     fill="none" stroke="#F1DEB0" stroke-width="${f(D.h * k)}" stroke-linecap="round"/>` + svg
+        svg += `<g transform="translate(0 ${f(yHaut)}) scale(1 ${k}) translate(0 ${-yHaut})">${D.svg(x, yHaut, w, D.h)}</g>`
+    }
+    return `<ellipse cx="${f(cx)}" cy="${f(yBas + 3)}" rx="${f(W * 0.62)}" ry="5" fill="#000" opacity=".55"/>` + svg
+}
+
+// Montage en vue éclatée : pastille jaune numérotée + dessin + nom de la couche
+function dessinerEclate(produit, l, h, o) {
+    semer(produit.numero * 97 + (o.baguette ? 13 : 0))
+    const couches = couchesDe(produit)
     const n = couches.length
-    // pile centrée verticalement (un peu plus de place en haut pour le dôme du pain)
-    const yBas = svgH / 2 + ((n - 1) * s) / 2 + s * 0.3
+    const pas = Math.min(o.pas * 1.45, (h - 14) / (n + 0.35))
+    const sDessin = o.pas * 0.66
     let svg = ''
     couches.forEach((c, i) => {
-        const cy = yBas - i * s
-        svg += DESSINS[c.t](o.centre, cy, o.largeur, s, c.q, c.nom, o.baguette)
-        const ls = lignes(c.e, o.maxCar)
-        const y0 = cy + 4 - ((ls.length - 1) * o.taille) / 2
-        svg += `<text x="${o.xTexte}" y="${f(y0)}" text-anchor="end" class="${c.fort ? 'lab fort' : 'lab'}" style="font-size:${o.taille}px">${ls
-            .map((l, k) => `<tspan x="${o.xTexte}" dy="${k ? o.taille : 0}">${l}</tspan>`)
-            .join('')}</text>
-                <text x="6" y="${f(cy + 4)}" class="num">${i + 1}</text>`
+        const cy = h - 10 - pas * (i + 0.5)
+        const yDessin = cy - o.pas * 0.12
+        svg += `<g filter="url(#ombre)">${ECLATE[c.t](o.centre, yDessin, o.largeur, sDessin, c.q, c.nom, o.baguette)}</g>`
+        svg += `<text x="${f(o.centre)}" y="${f(yDessin + o.pas * 0.4 + 4)}" text-anchor="middle" class="${c.fort ? 'lab fort' : 'lab'}">${c.e}</text>`
+        svg += `<circle cx="13" cy="${f(yDessin)}" r="8.5" fill="${JAUNE}" stroke="#111" stroke-width="1.2"/>
+                <text x="13" y="${f(yDessin + 3.6)}" text-anchor="middle" class="pastille">${i + 1}</text>`
     })
     return svg
 }
 
-const DEFS = `<defs>
-  <linearGradient id="croute" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E9AE58"/><stop offset="1" stop-color="#B8742C"/></linearGradient>
-  <linearGradient id="pane" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#EDB65A"/><stop offset="1" stop-color="#C47F25"/></linearGradient>
-</defs>`
-
-function carte(produit, l, svgH, o) {
-    return `<div class="carte">
-      <div class="tete"><span class="numero">${produit.numero}</span>${produit.nom}</div>
-      <svg width="${l}" height="${svgH}" viewBox="0 0 ${l} ${svgH}">${DEFS}${dessinerProduit(produit, svgH, o)}</svg>
-      <div class="resume">${produit.legende}</div>
+function colonne(produit, l, H, o) {
+    return `<div class="col">
+      <div class="tete"><span class="rond">${produit.numero}</span><span>${produit.nom}</span></div>
+      <div class="papier"><svg width="${l}" height="${H.papier}">${DEFS}${dessinerEclate(produit, l, H.papier, o)}</svg></div>
+      <div class="photo"><svg width="${l}" height="${H.photo}">${DEFS}
+        <rect width="${l}" height="${H.photo}" fill="url(#halo)"/>
+        ${dessinerMonte(produit, l / 2, H.photo - 14, o.largeurMonte, o.k, o.baguette)}</svg></div>
+      <div class="nom">${produit.nom}</div>
     </div>`
 }
 
-function legendeSauces() {
-    const item = (c, t, extra = '') => `<span class="sw"><i style="background:${c}">${extra}</i>${t}</span>`
-    return `<div class="legende">
-      <b>Sauces&nbsp;:</b>
-      ${item(COULEURS['sauce biggy'], 'Biggy (beige)')}
-      ${item(COULEURS['sauce pepper'], 'Pepper (poivrée)', '<em></em>')}
-      ${item(COULEURS['sauce spicy'], 'Spicy (rouge-orangé)')}
-      ${item(COULEURS['sauce bbq'], 'BBQ (brune)')}
-      ${item(COULEURS.ketchup, 'Ketchup')}
-      <span class="sep"></span>
-      <span>Lire chaque produit <b>de bas en haut</b> (1 = première couche posée)</span>
-      <span class="interdit">✕ Rien hors fiche : pas de tomate, pas de sésame</span>
-    </div>`
+// Bandeau des ingrédients utilisés sur la page (dans un ordre fixe)
+const CATALOGUE = [
+    ['painBurger', 'Pain burger', (cx, cy) => ECLATE.painHaut(cx, cy + 4, 46, 26)],
+    ['painSandwich', 'Pain sandwich', (cx, cy) => ECLATE.painHaut(cx, cy + 4, 50, 26, 1, '', true)],
+    ['galette', 'Galette fajitas', (cx, cy) => ECLATE.galette(cx, cy, 42, 30)],
+    ['sauce biggy', 'Sauce Biggy', (cx, cy) => ECLATE.sauce(cx, cy, 54, 40, 1, 'sauce biggy')],
+    ['sauce pepper', 'Sauce Pepper', (cx, cy) => ECLATE.sauce(cx, cy, 54, 40, 1, 'sauce pepper')],
+    ['sauce spicy', 'Sauce Spicy', (cx, cy) => ECLATE.sauce(cx, cy, 54, 40, 1, 'sauce spicy')],
+    ['sauce bbq', 'Sauce BBQ', (cx, cy) => ECLATE.sauce(cx, cy, 54, 40, 1, 'sauce bbq')],
+    ['ketchup', 'Ketchup', (cx, cy) => ECLATE.sauce(cx, cy, 54, 40, 1, 'ketchup')],
+    ['cheddar', 'Cheddar', (cx, cy) => ECLATE.cheddar(cx, cy, 48, 30)],
+    ['steak', 'Steak', (cx, cy) => ECLATE.steak(cx, cy, 48, 32)],
+    ['tender', 'Tender', (cx, cy) => ECLATE.tender(cx, cy, 60, 32, 1)],
+    ['tenderSmashe', 'Tender smashé', (cx, cy) => ECLATE.tenderSmashe(cx, cy, 46, 30)],
+    ['bacon', '½ bacon américain', (cx, cy) => ECLATE.bacon(cx, cy, 70, 30)],
+    ['cornichon', 'Cornichon', (cx, cy) => ECLATE.pieces(cx, cy, 30, 34, 1, 'cornichon')],
+    ['jalapeño', 'Jalapeño', (cx, cy) => ECLATE.pieces(cx, cy, 30, 34, 1, 'jalapeño')],
+    ['oignonsRouges', 'Oignons rouges', (cx, cy) => ECLATE.oignonsRouges(cx, cy, 46, 34)],
+    ['oignonsCaramelises', 'Oignons caramélisés', (cx, cy) => ECLATE.oignonsCaramelises(cx, cy, 50, 34)],
+    ['oignonsFrits', 'Oignons frits', (cx, cy) => ECLATE.oignonsFrits(cx, cy, 50, 34)],
+    ['salade', 'Salade', (cx, cy) => ECLATE.salade(cx, cy, 50, 34)],
+]
+
+function clesUtilisees(produits) {
+    const cles = new Set()
+    for (const p of produits)
+        for (const c of couchesDe(p)) {
+            if (c.t === 'painBas' || c.t === 'painHaut') cles.add(p.pain === 'pain sandwich' ? 'painSandwich' : 'painBurger')
+            else if (c.t === 'sauce') cles.add(c.nom)
+            else if (c.t === 'pieces') cles.add(c.nom)
+            else cles.add(c.t)
+        }
+    return cles
 }
 
-function page({ titre, sousTitre, produits, colonnes, lignes: nbLignes, opts, caseEnPlus }) {
-    const MARGE = 22, HAUT_TETE = 64, HAUT_LEGENDE = 34, HAUT_BAS = 22, ESP = 8
-    const TITRE = 42, RESUME = 34
-    const l = Math.floor((PAGE_L - 2 * MARGE) / colonnes)
-    const h = Math.floor((PAGE_H - 2 * MARGE - HAUT_TETE - HAUT_LEGENDE - HAUT_BAS - 3 * ESP) / nbLignes)
-    const svgH = h - TITRE - RESUME - 2
+function bandeauIngredients(produits) {
+    const cles = clesUtilisees(produits)
+    return CATALOGUE.filter(([cle]) => cles.has(cle))
+        .map(([, nom, dessin]) => `<div class="ing"><svg width="62" height="44">${DEFS}<g filter="url(#ombre)">${dessin(31, 22)}</g></svg><span>${nom}</span></div>`)
+        .join('')
+}
+
+const LOGO = `<svg width="92" height="92" viewBox="0 0 92 92">
+  <circle cx="46" cy="46" r="43" fill="#0B0B0B" stroke="#fff" stroke-width="4"/>
+  <circle cx="46" cy="46" r="35" fill="none" stroke="#fff" stroke-width="1.5"/>
+  <path d="M22,34 Q46,14 70,34" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <rect x="8" y="38" width="76" height="20" rx="3" fill="#fff"/>
+  <text x="46" y="53.5" text-anchor="middle" font-family="Anton" font-size="16" fill="#0B0B0B" letter-spacing=".5">TASTY FOOD</text>
+  <path d="M22,62 Q46,80 70,62" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round"/>
+</svg>`
+
+function page({ titre, produits, opts }) {
+    const MARGE = 16, HAUT_TETE = 112, BAS = 26
+    const nb = produits.length
+    const l = Math.floor((PAGE_L - 2 * MARGE - 8) / nb)
+    const hBande = PAGE_H - 2 * MARGE - HAUT_TETE - BAS
+    const H = { tete: 40, nom: 40, photo: opts.hautPhoto }
+    H.papier = hBande - 8 - H.tete - H.nom - H.photo
     const maxCouches = Math.max(...produits.map((p) => p.couches_bas_vers_haut.length))
-    const o = { ...opts, pas: Math.min(opts.pasMax, svgH / (maxCouches + 0.9)) }
-    const cartes = produits.map((p) => carte(p, l, svgH, o)).join('') + (caseEnPlus ? caseEnPlus() : '')
-    return `<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>${titre.replace(/<[^>]+>/g, '')}</title><style>
+    const pas = Math.min(54, (H.papier - 14) / (maxCouches + 0.35))
+    // même échelle verticale pour tous les produits montés : les hauteurs se comparent d'un coup d'œil
+    const plusHaut = Math.max(...produits.map((p) => hauteurProfil(couchesDe(p), opts.baguette)))
+    const k = Math.min(opts.kMax, (H.photo - 24) / plusHaut)
+    const o = { ...opts, pas, k }
+    const police = (nom, fichier, poids) =>
+        `@font-face { font-family:'${nom}'; font-weight:${poids}; src:url('file://${path.join(ICI, 'polices', fichier)}') format('woff2') }`
+    return `<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>${titre} · Fiches techniques</title><style>
+  ${police('Anton', 'anton-latin-400-normal.woff2', 400)}
+  ${police('Oswald', 'oswald-latin-500-normal.woff2', 500)}
+  ${police('Oswald', 'oswald-latin-600-normal.woff2', 600)}
+  ${police('Oswald', 'oswald-latin-700-normal.woff2', 700)}
   @page { size: A3 landscape; margin: 0 }
   * { box-sizing: border-box; margin: 0; padding: 0 }
-  body { width:${PAGE_L}px; height:${PAGE_H}px; background:#fff; color:#1A1A1A;
-         font-family: Inter, "Segoe UI", Arial, sans-serif; padding:${MARGE}px; overflow:hidden }
-  header { height:${HAUT_TETE}px; display:flex; align-items:center; justify-content:space-between;
-           background:#161616; color:#fff; border-radius:10px; padding:0 24px; margin-bottom:${ESP}px; border-bottom:5px solid #F07A1A }
-  header h1 { font-size:32px; font-weight:900; letter-spacing:.5px; text-transform:uppercase }
-  header h1 span { color:#F07A1A }
-  header p { font-size:15px; color:#ddd }
-  .grille { display:grid; grid-template-columns:repeat(${colonnes}, ${l}px); grid-auto-rows:${h}px;
-            border-top:1.5px solid #9E9E9E; border-left:1.5px solid #9E9E9E }
-  .carte, .info { border-right:1.5px solid #9E9E9E; border-bottom:1.5px solid #9E9E9E; display:flex; flex-direction:column; overflow:hidden }
-  .tete { height:${TITRE}px; display:flex; align-items:center; justify-content:center; gap:8px; padding-top:6px;
-          font-size:23px; font-weight:900; text-transform:uppercase; letter-spacing:.3px }
-  .numero { width:26px; height:26px; border-radius:50%; background:#F07A1A; color:#fff; font-size:15px;
-            display:flex; align-items:center; justify-content:center }
-  .resume { height:${RESUME}px; padding:0 10px; display:flex; align-items:center; justify-content:center; text-align:center;
-            font-size:11px; font-weight:600; color:#555; border-top:1px dashed #D5D5D5; line-height:1.2 }
-  svg .lab { font-size:12px; font-weight:600; fill:#333 } svg .fort { font-weight:900; fill:#111 }
-  svg .num { font-size:10px; font-weight:800; fill:#B0B0B0 }
-  .legende { margin-top:${ESP}px; height:${HAUT_LEGENDE}px; border-radius:8px; background:#F5F5F5; border:1px solid #DDD;
-             display:flex; align-items:center; gap:14px; padding:0 14px; font-size:12px; white-space:nowrap }
-  .sw { display:inline-flex; align-items:center; gap:6px } .sw i { width:22px; height:14px; border-radius:4px; border:1px solid rgba(0,0,0,.3); position:relative; overflow:hidden }
-  .sw em { position:absolute; inset:0; background-image:radial-gradient(#111 1px, transparent 1.3px); background-size:5px 5px }
-  .sep { width:1px; height:18px; background:#CCC }
-  .interdit { margin-left:auto; font-weight:800; color:#B3261E }
-  footer { margin-top:${ESP}px; height:${HAUT_BAS}px; text-align:center; font-size:13px; font-weight:800; letter-spacing:2px; text-transform:uppercase; color:#555 }
-  footer span { color:#F07A1A }
-  .info { background:#161616; color:#fff; padding:16px 18px; gap:6px }
-  .info h2 { font-size:28px; font-weight:900; line-height:1 } .info h2 span { color:#F07A1A }
-  .info h3 { font-size:13px; text-transform:uppercase; letter-spacing:1px; color:#F07A1A; margin:6px 0 2px }
-  .info table { border-collapse:collapse; font-size:13px; width:100% }
-  .info td { padding:4px 0; border-bottom:1px solid #333 } .info td:last-child { text-align:right; font-weight:800 }
+  body { width:${PAGE_L}px; height:${PAGE_H}px; padding:${MARGE}px; overflow:hidden; color:#fff;
+         font-family: Oswald, "Arial Narrow", Arial, sans-serif;
+         background: radial-gradient(ellipse at 30% 0%, #222 0%, #0A0A0A 55%) #0A0A0A }
+  header { height:${HAUT_TETE}px; display:flex; align-items:center; gap:18px }
+  .titre { display:flex; flex-direction:column; align-items:flex-start }
+  .titre h1 { font-family:Anton; font-weight:400; font-size:78px; line-height:.95; letter-spacing:1px; text-transform:uppercase;
+              text-shadow: 0 3px 0 #000, 0 0 18px rgba(255,255,255,.08) }
+  .ruban { margin-top:2px; margin-left:26px; background:${JAUNE}; color:#111; font-weight:700; font-size:19px; letter-spacing:1px;
+           padding:1px 18px; transform:rotate(-3deg) skewX(-10deg); text-transform:uppercase;
+           clip-path: polygon(2% 8%, 30% 0, 62% 6%, 100% 0, 97% 55%, 100% 100%, 64% 92%, 30% 100%, 0 94%, 3% 50%) }
+  .ingredients { margin-left:auto; display:flex; gap:2px }
+  .ing { width:66px; display:flex; flex-direction:column; align-items:center; text-align:center }
+  .ing span { font-size:11px; font-weight:500; line-height:1.1; color:#EEE; margin-top:1px }
+  .bande { height:${hBande}px; display:flex; border:2px solid #3A3A3A; border-radius:12px; overflow:hidden; background:#111;
+           padding:2px }
+  .col { width:${l}px; display:flex; flex-direction:column; border-right:2px solid #0A0A0A }
+  .col:last-child { border-right:0 }
+  .tete { height:${H.tete}px; display:flex; align-items:center; gap:7px; padding:0 8px; background:#111;
+          font-family:Anton; font-size:${opts.taillenom}px; letter-spacing:.5px; text-transform:uppercase; white-space:nowrap }
+  .rond { flex:none; width:24px; height:24px; border-radius:50%; background:${JAUNE}; color:#111; border:1.5px solid #000;
+          font-family:Oswald; font-weight:700; font-size:14px; display:flex; align-items:center; justify-content:center }
+  .papier { height:${H.papier}px; background: linear-gradient(180deg, #F4EFE6 0%, #EAE3D6 100%) }
+  .photo { height:${H.photo}px; background:#060606 }
+  .nom { height:${H.nom}px; background:#060606; font-family:Anton; font-size:${opts.taillenom + 4}px; letter-spacing:.5px; text-transform:uppercase;
+         display:flex; align-items:center; justify-content:center; white-space:nowrap; border-top:1px solid #222 }
+  svg .lab { font-family:Oswald; font-weight:500; font-size:${opts.tailleLab}px; fill:#2A2A2A }
+  svg .fort { font-weight:700; fill:#000 }
+  svg .pastille { font-family:Oswald; font-weight:700; font-size:11px; fill:#111 }
+  footer { height:${BAS}px; display:flex; align-items:flex-end; justify-content:space-between; font-size:13px; color:#BBB; letter-spacing:.5px }
+  footer b { color:${JAUNE}; font-weight:600 }
 </style></head><body>
-  <header><h1>${titre}</h1><p>${sousTitre}</p></header>
-  <div class="grille">${cartes}</div>
-  ${legendeSauces()}
-  <footer>Tasty Food <span>Saint-Gilles</span> · Liège</footer>
+  <header>
+    ${LOGO}
+    <div class="titre"><h1>${titre}</h1><div class="ruban">Fiches techniques</div></div>
+    <div class="ingredients">${bandeauIngredients(produits)}</div>
+  </header>
+  <div class="bande">${produits.map((p) => colonne(p, l - 1, H, o)).join('')}</div>
+  <footer><span>Lire chaque produit <b>de bas en haut</b> : 1 = première couche posée</span>
+    <span><b>Rien hors fiche</b> : pas de tomate, pas de sésame, pas d'autre sauce</span>
+    <span>Tasty Food <b>Saint-Gilles</b> · Liège</span></footer>
 </body></html>`
-}
-
-// Case n°12 de la page burgers : repère rapide du nombre de steaks
-function caseRepere() {
-    const lignesTab = recettes.burgers
-        .map((b) => {
-            const steaks = b.couches_bas_vers_haut.filter((c) => c.ingredient === 'steak').length
-            const tender = b.couches_bas_vers_haut.some((c) => c.ingredient.startsWith('tender'))
-            return `<tr><td>${b.numero}. ${b.nom}</td><td>${tender ? 'tender' : steaks + ' steak' + (steaks > 1 ? 's' : '')}</td></tr>`
-        })
-        .join('')
-    return `<div class="info"><h2>Tasty <span>Food</span></h2><h3>Repère rapide : la viande</h3><table>${lignesTab}</table></div>`
 }
 
 async function main() {
     fs.mkdirSync(SORTIE, { recursive: true })
     const pages = {
         'fiche-burgers': page({
-            titre: 'Fiche technique · <span>Burgers</span>',
-            sousTitre: 'Bun brioché lisse sans sésame · cheddar toujours posé sur le steak',
+            titre: 'Burgers',
             produits: recettes.burgers,
-            colonnes: 6,
-            lignes: 2,
-            opts: { largeur: 122, centre: 192, xTexte: 120, maxCar: 16, pasMax: 34, taille: 12 },
-            caseEnPlus: caseRepere,
+            opts: { largeur: 84, centre: 80, largeurMonte: 104, kMax: 1.2, hautPhoto: 200, tailleLab: 10.5, taillenom: 18 },
         }),
         'fiche-sandwichs': page({
-            titre: 'Fiche technique · <span>Sandwichs</span>',
-            sousTitre: 'Demi-baguette belge · cheddar toujours posé sur le steak',
+            titre: 'Sandwichs',
             produits: recettes.sandwichs,
-            colonnes: 4,
-            lignes: 2,
-            opts: { largeur: 210, centre: 272, xTexte: 152, maxCar: 16, pasMax: 34, taille: 14, baguette: true },
+            opts: { largeur: 140, centre: 108, largeurMonte: 168, kMax: 1.3, hautPhoto: 190, tailleLab: 12, taillenom: 20, baguette: true },
         }),
     }
     const navigateur = await chromium.launch()
@@ -370,6 +237,7 @@ async function main() {
         fs.writeFileSync(fichierHtml, html)
         const onglet = await navigateur.newPage({ viewport: { width: PAGE_L, height: PAGE_H }, deviceScaleFactor: ECHELLE_PNG })
         await onglet.goto('file://' + fichierHtml)
+        await onglet.evaluate(() => document.fonts.ready)
         await onglet.screenshot({ path: path.join(SORTIE, nom + '.png') })
         await onglet.pdf({ path: path.join(SORTIE, nom + '.pdf'), format: 'A3', landscape: true, printBackground: true })
         console.log('✔', nom + '.png', '+', nom + '.pdf')
