@@ -1,13 +1,13 @@
 # Tasty Food Saint-Gilles : fiches techniques
 
-Fiches A3 à afficher en cuisine. Chaque produit y est dessiné couche par couche, de bas en haut, avec le nombre exact de pièces.
+Fiches A3 paysage à afficher en cuisine, en vue éclatée : chaque couche est dessinée séparément, de bas en haut, avec son nom et le nombre exact de pièces.
 
 - `sortie/fiche-burgers.pdf` / `.png` : les 11 burgers
 - `sortie/fiche-sandwichs.pdf` / `.png` : les 8 sandwichs
 - `data/recettes.json` : les recettes (la seule chose à modifier si une recette change)
 - `verification.md` : contrôle produit par produit
 
-Pour imprimer, utilisez le **PDF** (format A3, à 100 % / « taille réelle »).
+Pour imprimer, utilisez le **PDF** (format A3 paysage, à 100 % / « taille réelle »).
 
 ## Regénérer après une modification de recette (Windows + VS Code)
 
