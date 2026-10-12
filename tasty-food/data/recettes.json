@@ -1,0 +1,889 @@
+{
+  "_note": "Couches listées DE BAS EN HAUT. 'quantite' = nombre de pièces dans la couche.",
+  "visuel": {
+    "pain_burger": "A_CONFIRMER (ex. bun brioché lisse sans sésame)",
+    "pain_sandwich": "A_CONFIRMER (ex. demi-baguette belge ouverte sur le côté)",
+    "galette_fajitas": "tortilla roulée, coupée en deux pour montrer l'intérieur",
+    "sauces": {
+      "sauce biggy": "A_CONFIRMER (couleur)",
+      "sauce pepper": "sauce crème au poivre beige mouchetée de noir",
+      "sauce spicy": "sauce rouge-orangé",
+      "sauce bbq": "sauce brun foncé brillante",
+      "ketchup": "ketchup rouge"
+    },
+    "cheddar": "cheddar fondu qui coule légèrement sur les steaks",
+    "interdits": [
+      "tomate",
+      "graines de sésame",
+      "toute sauce ou ingrédient absent de la fiche"
+    ]
+  },
+  "burgers": [
+    {
+      "numero": 1,
+      "nom": "Kid",
+      "pain": "pain burger",
+      "couches_bas_vers_haut": [
+        {
+          "ingredient": "pain burger (bas)",
+          "quantite": 1
+        },
+        {
+          "ingredient": "ketchup",
+          "quantite": 1
+        },
+        {
+          "ingredient": "cornichon",
+          "quantite": 1
+        },
+        {
+          "ingredient": "steak",
+          "quantite": 1
+        },
+        {
+          "ingredient": "cheddar",
+          "quantite": 1
+        },
+        {
+          "ingredient": "pain burger (haut)",
+          "quantite": 1
+        }
+      ],
+      "legende": "Ketchup · cornichon · 1 steak · cheddar"
+    },
+    {
+      "numero": 2,
+      "nom": "Simple",
+      "pain": "pain burger",
+      "couches_bas_vers_haut": [
+        {
+          "ingredient": "pain burger (bas)",
+          "quantite": 1
+        },
+        {
+          "ingredient": "sauce biggy",
+          "quantite": 1
+        },
+        {
+          "ingredient": "cornichon",
+          "quantite": 1
+        },
+        {
+          "ingredient": "steak",
+          "quantite": 1
+        },
+        {
+          "ingredient": "cheddar",
+          "quantite": 1
+        },
+        {
+          "ingredient": "feuille de salade",
+          "quantite": 1
+        },
+        {
+          "ingredient": "pain burger (haut)",
+          "quantite": 1
+        }
+      ],
+      "legende": "Biggy · cornichon · 1 steak · cheddar · salade"
+    },
+    {
+      "numero": 3,
+      "nom": "Double",
+      "pain": "pain burger",
+      "couches_bas_vers_haut": [
+        {
+          "ingredient": "pain burger (bas)",
+          "quantite": 1
+        },
+        {
+          "ingredient": "sauce biggy",
+          "quantite": 1
+        },
+        {
+          "ingredient": "cornichon",
+          "quantite": 2
+        },
+        {
+          "ingredient": "steak",
+          "quantite": 1
+        },
+        {
+          "ingredient": "cheddar",
+          "quantite": 1
+        },
+        {
+          "ingredient": "steak",
+          "quantite": 1
+        },
+        {
+          "ingredient": "cheddar",
+          "quantite": 1
+        },
+        {
+          "ingredient": "feuille de salade",
+          "quantite": 1
+        },
+        {
+          "ingredient": "pain burger (haut)",
+          "quantite": 1
+        }
+      ],
+      "legende": "Biggy · 2 cornichons · 2 steaks · 2 cheddars · salade"
+    },
+    {
+      "numero": 4,
+      "nom": "Triple",
+      "pain": "pain burger",
+      "couches_bas_vers_haut": [
+        {
+          "ingredient": "pain burger (bas)",
+          "quantite": 1
+        },
+        {
+          "ingredient": "sauce biggy",
+          "quantite": 1
+        },
+        {
+          "ingredient": "cornichon",
+          "quantite": 3
+        },
+        {
+          "ingredient": "steak",
+          "quantite": 1
+        },
+        {
+          "ingredient": "cheddar",
+          "quantite": 1
+        },
+        {
+          "ingredient": "steak",
+          "quantite": 1
+        },
+        {
+          "ingredient": "cheddar",
+          "quantite": 1
+        },
+        {
+          "ingredient": "steak",
+          "quantite": 1
+        },
+        {
+          "ingredient": "cheddar",
+          "quantite": 1
+        },
+        {
+          "ingredient": "feuille de salade",
+          "quantite": 1
+        },
+        {
+          "ingredient": "pain burger (haut)",
+          "quantite": 1
+        }
+      ],
+      "legende": "Biggy · 3 cornichons · 3 steaks · 3 cheddars · salade"
+    },
+    {
+      "numero": 5,
+      "nom": "Suprême",
+      "pain": "pain burger",
+      "couches_bas_vers_haut": [
+        {
+          "ingredient": "pain burger (bas)",
+          "quantite": 1
+        },
+        {
+          "ingredient": "sauce biggy",
+          "quantite": 1
+        },
+        {
+          "ingredient": "cornichon",
+          "quantite": 4
+        },
+        {
+          "ingredient": "steak",
+          "quantite": 1
+        },
+        {
+          "ingredient": "cheddar",
+          "quantite": 1
+        },
+        {
+          "ingredient": "steak",
+          "quantite": 1
+        },
+        {
+          "ingredient": "cheddar",
+          "quantite": 1
+        },
+        {
+          "ingredient": "steak",
+          "quantite": 1
+        },
+        {
+          "ingredient": "cheddar",
+          "quantite": 1
+        },
+        {
+          "ingredient": "steak",
+          "quantite": 1
+        },
+        {
+          "ingredient": "cheddar",
+          "quantite": 1
+        },
+        {
+          "ingredient": "feuille de salade",
+          "quantite": 1
+        },
+        {
+          "ingredient": "pain burger (haut)",
+          "quantite": 1
+        }
+      ],
+      "legende": "Biggy · 4 cornichons · 4 steaks · 4 cheddars · salade"
+    },
+    {
+      "numero": 6,
+      "nom": "Pepper",
+      "pain": "pain burger",
+      "couches_bas_vers_haut": [
+        {
+          "ingredient": "pain burger (bas)",
+          "quantite": 1
+        },
+        {
+          "ingredient": "sauce pepper",
+          "quantite": 1
+        },
+        {
+          "ingredient": "steak",
+          "quantite": 1
+        },
+        {
+          "ingredient": "cheddar",
+          "quantite": 1
+        },
+        {
+          "ingredient": "steak",
+          "quantite": 1
+        },
+        {
+          "ingredient": "cheddar",
+          "quantite": 1
+        },
+        {
+          "ingredient": "feuille de salade",
+          "quantite": 1
+        },
+        {
+          "ingredient": "sauce biggy (sous le pain du haut)",
+          "quantite": 1
+        },
+        {
+          "ingredient": "pain burger (haut)",
+          "quantite": 1
+        }
+      ],
+      "legende": "Pepper · 2 steaks · 2 cheddars · salade · biggy"
+    },
+    {
+      "numero": 7,
+      "nom": "Spicy",
+      "pain": "pain burger",
+      "couches_bas_vers_haut": [
+        {
+          "ingredient": "pain burger (bas)",
+          "quantite": 1
+        },
+        {
+          "ingredient": "sauce spicy",
+          "quantite": 1
+        },
+        {
+          "ingredient": "oignons rouges",
+          "quantite": 1
+        },
+        {
+          "ingredient": "steak",
+          "quantite": 1
+        },
+        {
+          "ingredient": "cheddar",
+          "quantite": 1
+        },
+        {
+          "ingredient": "steak",
+          "quantite": 1
+        },
+        {
+          "ingredient": "cheddar",
+          "quantite": 1
+        },
+        {
+          "ingredient": "feuille de salade",
+          "quantite": 1
+        },
+        {
+          "ingredient": "sauce biggy (sous le pain du haut)",
+          "quantite": 1
+        },
+        {
+          "ingredient": "pain burger (haut)",
+          "quantite": 1
+        }
+      ],
+      "legende": "Spicy · oignons rouges · 2 steaks · 2 cheddars · salade · biggy"
+    },
+    {
+      "numero": 8,
+      "nom": "BBQ",
+      "pain": "pain burger",
+      "couches_bas_vers_haut": [
+        {
+          "ingredient": "pain burger (bas)",
+          "quantite": 1
+        },
+        {
+          "ingredient": "sauce bbq",
+          "quantite": 1
+        },
+        {
+          "ingredient": "steak",
+          "quantite": 1
+        },
+        {
+          "ingredient": "cheddar",
+          "quantite": 1
+        },
+        {
+          "ingredient": "steak",
+          "quantite": 1
+        },
+        {
+          "ingredient": "cheddar",
+          "quantite": 1
+        },
+        {
+          "ingredient": "1/2 tranche de bacon américain",
+          "quantite": 1
+        },
+        {
+          "ingredient": "oignons caramélisés",
+          "quantite": 1
+        },
+        {
+          "ingredient": "feuille de salade",
+          "quantite": 1
+        },
+        {
+          "ingredient": "sauce biggy (sous le pain du haut)",
+          "quantite": 1
+        },
+        {
+          "ingredient": "pain burger (haut)",
+          "quantite": 1
+        }
+      ],
+      "legende": "BBQ · 2 steaks · 2 cheddars · ½ bacon · oignons caramélisés · salade · biggy"
+    },
+    {
+      "numero": 9,
+      "nom": "A23",
+      "pain": "pain burger",
+      "couches_bas_vers_haut": [
+        {
+          "ingredient": "pain burger (bas)",
+          "quantite": 1
+        },
+        {
+          "ingredient": "sauce pepper",
+          "quantite": 1
+        },
+        {
+          "ingredient": "jalapeño",
+          "quantite": 3
+        },
+        {
+          "ingredient": "steak",
+          "quantite": 1
+        },
+        {
+          "ingredient": "cheddar",
+          "quantite": 1
+        },
+        {
+          "ingredient": "steak",
+          "quantite": 1
+        },
+        {
+          "ingredient": "cheddar",
+          "quantite": 1
+        },
+        {
+          "ingredient": "steak",
+          "quantite": 1
+        },
+        {
+          "ingredient": "cheddar",
+          "quantite": 1
+        },
+        {
+          "ingredient": "oignons caramélisés",
+          "quantite": 1
+        },
+        {
+          "ingredient": "feuille de salade",
+          "quantite": 1
+        },
+        {
+          "ingredient": "sauce biggy (sous le pain du haut)",
+          "quantite": 1
+        },
+        {
+          "ingredient": "pain burger (haut)",
+          "quantite": 1
+        }
+      ],
+      "legende": "Pepper · 3 jalapeños · 3 steaks · 3 cheddars · oignons caramélisés · salade · biggy"
+    },
+    {
+      "numero": 10,
+      "nom": "Chicken",
+      "pain": "pain burger",
+      "couches_bas_vers_haut": [
+        {
+          "ingredient": "pain burger (bas)",
+          "quantite": 1
+        },
+        {
+          "ingredient": "sauce biggy",
+          "quantite": 1
+        },
+        {
+          "ingredient": "tender smashé (poulet pané aplati)",
+          "quantite": 1
+        },
+        {
+          "ingredient": "cheddar",
+          "quantite": 1
+        },
+        {
+          "ingredient": "feuille de salade",
+          "quantite": 1
+        },
+        {
+          "ingredient": "pain burger (haut)",
+          "quantite": 1
+        }
+      ],
+      "legende": "Biggy · tender smashé · cheddar · salade"
+    },
+    {
+      "numero": 11,
+      "nom": "Fajitas",
+      "pain": "galette fajitas roulée, coupée en deux",
+      "couches_bas_vers_haut": [
+        {
+          "ingredient": "galette fajitas (enveloppe roulée)",
+          "quantite": 1
+        },
+        {
+          "ingredient": "sauce biggy",
+          "quantite": 1
+        },
+        {
+          "ingredient": "oignons frits",
+          "quantite": 1
+        },
+        {
+          "ingredient": "oignons rouges",
+          "quantite": 1
+        },
+        {
+          "ingredient": "steak",
+          "quantite": 1
+        },
+        {
+          "ingredient": "cheddar",
+          "quantite": 1
+        },
+        {
+          "ingredient": "feuille de salade",
+          "quantite": 1
+        }
+      ],
+      "legende": "Galette · biggy · oignons frits · oignons rouges · 1 steak · cheddar · salade"
+    }
+  ],
+  "sandwichs": [
+    {
+      "numero": 1,
+      "nom": "Sand Steak",
+      "pain": "pain sandwich",
+      "couches_bas_vers_haut": [
+        {
+          "ingredient": "pain sandwich (bas)",
+          "quantite": 1
+        },
+        {
+          "ingredient": "sauce biggy",
+          "quantite": 1
+        },
+        {
+          "ingredient": "feuille de salade",
+          "quantite": 1
+        },
+        {
+          "ingredient": "steak",
+          "quantite": 1
+        },
+        {
+          "ingredient": "cheddar",
+          "quantite": 1
+        },
+        {
+          "ingredient": "steak",
+          "quantite": 1
+        },
+        {
+          "ingredient": "cheddar",
+          "quantite": 1
+        },
+        {
+          "ingredient": "pain sandwich (haut)",
+          "quantite": 1
+        }
+      ],
+      "legende": "Biggy · salade · 2 steaks · 2 cheddars"
+    },
+    {
+      "numero": 2,
+      "nom": "Sand Suprême",
+      "pain": "pain sandwich",
+      "couches_bas_vers_haut": [
+        {
+          "ingredient": "pain sandwich (bas)",
+          "quantite": 1
+        },
+        {
+          "ingredient": "sauce biggy",
+          "quantite": 1
+        },
+        {
+          "ingredient": "feuille de salade",
+          "quantite": 1
+        },
+        {
+          "ingredient": "steak",
+          "quantite": 1
+        },
+        {
+          "ingredient": "cheddar",
+          "quantite": 1
+        },
+        {
+          "ingredient": "steak",
+          "quantite": 1
+        },
+        {
+          "ingredient": "cheddar",
+          "quantite": 1
+        },
+        {
+          "ingredient": "steak",
+          "quantite": 1
+        },
+        {
+          "ingredient": "cheddar",
+          "quantite": 1
+        },
+        {
+          "ingredient": "steak",
+          "quantite": 1
+        },
+        {
+          "ingredient": "cheddar",
+          "quantite": 1
+        },
+        {
+          "ingredient": "pain sandwich (haut)",
+          "quantite": 1
+        }
+      ],
+      "legende": "Biggy · salade · 4 steaks · 4 cheddars"
+    },
+    {
+      "numero": 3,
+      "nom": "Sand Pepper",
+      "pain": "pain sandwich",
+      "couches_bas_vers_haut": [
+        {
+          "ingredient": "pain sandwich (bas)",
+          "quantite": 1
+        },
+        {
+          "ingredient": "sauce biggy",
+          "quantite": 1
+        },
+        {
+          "ingredient": "sauce pepper",
+          "quantite": 1
+        },
+        {
+          "ingredient": "feuille de salade",
+          "quantite": 1
+        },
+        {
+          "ingredient": "steak",
+          "quantite": 1
+        },
+        {
+          "ingredient": "cheddar",
+          "quantite": 1
+        },
+        {
+          "ingredient": "steak",
+          "quantite": 1
+        },
+        {
+          "ingredient": "cheddar",
+          "quantite": 1
+        },
+        {
+          "ingredient": "pain sandwich (haut)",
+          "quantite": 1
+        }
+      ],
+      "legende": "Biggy · pepper · salade · 2 steaks · 2 cheddars"
+    },
+    {
+      "numero": 4,
+      "nom": "Sand Spicy",
+      "pain": "pain sandwich",
+      "couches_bas_vers_haut": [
+        {
+          "ingredient": "pain sandwich (bas)",
+          "quantite": 1
+        },
+        {
+          "ingredient": "sauce biggy",
+          "quantite": 1
+        },
+        {
+          "ingredient": "sauce spicy",
+          "quantite": 1
+        },
+        {
+          "ingredient": "oignons rouges",
+          "quantite": 1
+        },
+        {
+          "ingredient": "feuille de salade",
+          "quantite": 1
+        },
+        {
+          "ingredient": "steak",
+          "quantite": 1
+        },
+        {
+          "ingredient": "cheddar",
+          "quantite": 1
+        },
+        {
+          "ingredient": "steak",
+          "quantite": 1
+        },
+        {
+          "ingredient": "cheddar",
+          "quantite": 1
+        },
+        {
+          "ingredient": "pain sandwich (haut)",
+          "quantite": 1
+        }
+      ],
+      "legende": "Biggy · spicy · oignons rouges · salade · 2 steaks · 2 cheddars"
+    },
+    {
+      "numero": 5,
+      "nom": "Sand Fumé",
+      "pain": "pain sandwich",
+      "couches_bas_vers_haut": [
+        {
+          "ingredient": "pain sandwich (bas)",
+          "quantite": 1
+        },
+        {
+          "ingredient": "sauce biggy",
+          "quantite": 1
+        },
+        {
+          "ingredient": "sauce bbq",
+          "quantite": 1
+        },
+        {
+          "ingredient": "feuille de salade",
+          "quantite": 1
+        },
+        {
+          "ingredient": "steak",
+          "quantite": 1
+        },
+        {
+          "ingredient": "cheddar",
+          "quantite": 1
+        },
+        {
+          "ingredient": "steak",
+          "quantite": 1
+        },
+        {
+          "ingredient": "cheddar",
+          "quantite": 1
+        },
+        {
+          "ingredient": "1/2 tranche de bacon américain",
+          "quantite": 1
+        },
+        {
+          "ingredient": "oignons caramélisés",
+          "quantite": 1
+        },
+        {
+          "ingredient": "pain sandwich (haut)",
+          "quantite": 1
+        }
+      ],
+      "legende": "Biggy · bbq · salade · 2 steaks · 2 cheddars · ½ bacon · oignons caramélisés"
+    },
+    {
+      "numero": 6,
+      "nom": "Sand A23",
+      "pain": "pain sandwich",
+      "couches_bas_vers_haut": [
+        {
+          "ingredient": "pain sandwich (bas)",
+          "quantite": 1
+        },
+        {
+          "ingredient": "sauce biggy",
+          "quantite": 1
+        },
+        {
+          "ingredient": "sauce pepper",
+          "quantite": 1
+        },
+        {
+          "ingredient": "jalapeño",
+          "quantite": 5
+        },
+        {
+          "ingredient": "feuille de salade",
+          "quantite": 1
+        },
+        {
+          "ingredient": "steak",
+          "quantite": 1
+        },
+        {
+          "ingredient": "cheddar",
+          "quantite": 1
+        },
+        {
+          "ingredient": "steak",
+          "quantite": 1
+        },
+        {
+          "ingredient": "cheddar",
+          "quantite": 1
+        },
+        {
+          "ingredient": "oignons caramélisés",
+          "quantite": 1
+        },
+        {
+          "ingredient": "pain sandwich (haut)",
+          "quantite": 1
+        }
+      ],
+      "legende": "Biggy · pepper · ~5 jalapeños · salade · 2 steaks · 2 cheddars · oignons caramélisés"
+    },
+    {
+      "numero": 7,
+      "nom": "Sand Mixte",
+      "pain": "pain sandwich",
+      "couches_bas_vers_haut": [
+        {
+          "ingredient": "pain sandwich (bas)",
+          "quantite": 1
+        },
+        {
+          "ingredient": "sauce biggy",
+          "quantite": 1
+        },
+        {
+          "ingredient": "feuille de salade",
+          "quantite": 1
+        },
+        {
+          "ingredient": "steak",
+          "quantite": 1
+        },
+        {
+          "ingredient": "cheddar",
+          "quantite": 1
+        },
+        {
+          "ingredient": "steak",
+          "quantite": 1
+        },
+        {
+          "ingredient": "cheddar",
+          "quantite": 1
+        },
+        {
+          "ingredient": "tender",
+          "quantite": 1
+        },
+        {
+          "ingredient": "pain sandwich (haut)",
+          "quantite": 1
+        }
+      ],
+      "legende": "Biggy · salade · 2 steaks · 2 cheddars · 1 tender"
+    },
+    {
+      "numero": 8,
+      "nom": "Sand Tenders",
+      "pain": "pain sandwich",
+      "couches_bas_vers_haut": [
+        {
+          "ingredient": "pain sandwich (bas)",
+          "quantite": 1
+        },
+        {
+          "ingredient": "sauce biggy",
+          "quantite": 1
+        },
+        {
+          "ingredient": "feuille de salade",
+          "quantite": 1
+        },
+        {
+          "ingredient": "tender",
+          "quantite": 2
+        },
+        {
+          "ingredient": "cheddar",
+          "quantite": 1
+        },
+        {
+          "ingredient": "pain sandwich (haut)",
+          "quantite": 1
+        }
+      ],
+      "legende": "Biggy · salade · 2 tenders · cheddar"
+    }
+  ]
+}

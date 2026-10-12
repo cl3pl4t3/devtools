@@ -1,0 +1,4 @@
+# Clé API : ne jamais publier
+.env
+# Images intermédiaires générées
+images/
