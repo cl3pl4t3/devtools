@@ -1,11 +1,11 @@
 {
   "_note": "Couches listées DE BAS EN HAUT. 'quantite' = nombre de pièces dans la couche.",
   "visuel": {
-    "pain_burger": "A_CONFIRMER (ex. bun brioché lisse sans sésame)",
-    "pain_sandwich": "A_CONFIRMER (ex. demi-baguette belge ouverte sur le côté)",
+    "pain_burger": "bun brioché lisse, sans sésame",
+    "pain_sandwich": "demi-baguette belge",
     "galette_fajitas": "tortilla roulée, coupée en deux pour montrer l'intérieur",
     "sauces": {
-      "sauce biggy": "A_CONFIRMER (couleur)",
+      "sauce biggy": "sauce crémeuse beige",
       "sauce pepper": "sauce crème au poivre beige mouchetée de noir",
       "sauce spicy": "sauce rouge-orangé",
       "sauce bbq": "sauce brun foncé brillante",

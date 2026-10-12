@@ -2,3 +2,6 @@
 .env
 # Images intermédiaires générées
 images/
+sortie/*.html
+node_modules/
+package*.json
