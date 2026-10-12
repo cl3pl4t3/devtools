@@ -9,6 +9,7 @@ const { chromium } = require('playwright')
 const { semer, f, couchesDe } = require('./lib/commun')
 const ECLATE = require('./lib/eclate')
 const PROFIL = require('./lib/profil')
+const { DEFS, avecFiltre } = require('./lib/rendu')
 
 const ICI = __dirname
 const SORTIE = path.join(ICI, 'sortie')
@@ -20,14 +21,6 @@ const PAGE_H = 1123
 const ECHELLE_PNG = 3.125
 const JAUNE = '#FFC20E'
 
-const DEFS = `<defs>
-  <linearGradient id="croute" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ECB25C"/><stop offset="1" stop-color="#B26A26"/></linearGradient>
-  <linearGradient id="brioche" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#EBAA52"/><stop offset="1" stop-color="#B26A26"/></linearGradient>
-  <linearGradient id="viande" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7A4528"/><stop offset="1" stop-color="#3E2112"/></linearGradient>
-  <linearGradient id="pane" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#EDB65A"/><stop offset="1" stop-color="#C47F25"/></linearGradient>
-  <filter id="ombre" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="1.5" stdDeviation="1.2" flood-opacity=".35"/></filter>
-  <radialGradient id="halo" cx=".5" cy=".62" r=".6"><stop offset="0" stop-color="#FF8A1E" stop-opacity=".38"/><stop offset=".55" stop-color="#FF6A00" stop-opacity=".1"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
-</defs>`
 
 // Type de dessin « produit monté » correspondant à une couche
 function typeProfil(c, baguette) {
@@ -53,7 +46,7 @@ function dessinerMonte(produit, cx, yBas, W, k, baguette) {
         const D = PROFIL[typeProfil(c, baguette)]
         const w = W * D.l
         y -= D.h * k
-        svg += `<g transform="translate(0 ${f(y)}) scale(1 ${k}) translate(0 ${-y})">${D.svg(cx - w / 2, y, w, D.h, c.q, c.nom)}</g>`
+        svg += `<g transform="translate(0 ${f(y)}) scale(1 ${k}) translate(0 ${-y})">${avecFiltre(typeProfil(c, baguette), D.svg(cx - w / 2, y, w, D.h, c.q, c.nom))}</g>`
         y -= 1.5 * k
     }
     if (couches[0].t === 'galette') {
@@ -66,7 +59,7 @@ function dessinerMonte(produit, cx, yBas, W, k, baguette) {
         svg = `<path d="M${f(x + 6)},${f(yBas)} Q${f(x - 10)},${f(yBas)} ${f(x - 10)},${f((yBas + yHaut) / 2)} Q${f(x - 10)},${f(yHaut)} ${f(x + 6)},${f(yHaut)}
                      M${f(x + w - 6)},${f(yBas)} Q${f(x + w + 10)},${f(yBas)} ${f(x + w + 10)},${f((yBas + yHaut) / 2)} Q${f(x + w + 10)},${f(yHaut)} ${f(x + w - 6)},${f(yHaut)}"
                      fill="none" stroke="#F1DEB0" stroke-width="${f(D.h * k)}" stroke-linecap="round"/>` + svg
-        svg += `<g transform="translate(0 ${f(yHaut)}) scale(1 ${k}) translate(0 ${-yHaut})">${D.svg(x, yHaut, w, D.h)}</g>`
+        svg += `<g transform="translate(0 ${f(yHaut)}) scale(1 ${k}) translate(0 ${-yHaut})">${avecFiltre('galette', D.svg(x, yHaut, w, D.h))}</g>`
     }
     return `<ellipse cx="${f(cx)}" cy="${f(yBas + 3)}" rx="${f(W * 0.62)}" ry="5" fill="#000" opacity=".55"/>` + svg
 }
@@ -82,7 +75,7 @@ function dessinerEclate(produit, l, h, o) {
     couches.forEach((c, i) => {
         const cy = h - 10 - pas * (i + 0.5)
         const yDessin = cy - o.pas * 0.12
-        svg += `<g filter="url(#ombre)">${ECLATE[c.t](o.centre, yDessin, o.largeur, sDessin, c.q, c.nom, o.baguette)}</g>`
+        svg += `<g filter="url(#ombre)">${avecFiltre(c.t, ECLATE[c.t](o.centre, yDessin, o.largeur, sDessin, c.q, c.nom, o.baguette))}</g>`
         svg += `<text x="${f(o.centre)}" y="${f(yDessin + o.pas * 0.4 + 4)}" text-anchor="middle" class="${c.fort ? 'lab fort' : 'lab'}">${c.e}</text>`
         svg += `<circle cx="13" cy="${f(yDessin)}" r="8.5" fill="${JAUNE}" stroke="#111" stroke-width="1.2"/>
                 <text x="13" y="${f(yDessin + 3.6)}" text-anchor="middle" class="pastille">${i + 1}</text>`
@@ -115,9 +108,9 @@ const CATALOGUE = [
     ['steak', 'Steak', (cx, cy) => ECLATE.steak(cx, cy, 48, 32)],
     ['tender', 'Tender', (cx, cy) => ECLATE.tender(cx, cy, 60, 32, 1)],
     ['tenderSmashe', 'Tender smashé', (cx, cy) => ECLATE.tenderSmashe(cx, cy, 46, 30)],
-    ['bacon', '½ bacon américain', (cx, cy) => ECLATE.bacon(cx, cy, 70, 30)],
-    ['cornichon', 'Cornichon', (cx, cy) => ECLATE.pieces(cx, cy, 30, 34, 1, 'cornichon')],
-    ['jalapeño', 'Jalapeño', (cx, cy) => ECLATE.pieces(cx, cy, 30, 34, 1, 'jalapeño')],
+    ['bacon', '½ bacon américain', (cx, cy) => ECLATE.bacon(cx, cy, 90, 48)],
+    ['cornichon', 'Cornichon', (cx, cy) => ECLATE.pieces(cx, cy, 40, 64, 1, 'cornichon')],
+    ['jalapeño', 'Jalapeño', (cx, cy) => ECLATE.pieces(cx, cy, 40, 64, 1, 'jalapeño')],
     ['oignonsRouges', 'Oignons rouges', (cx, cy) => ECLATE.oignonsRouges(cx, cy, 46, 34)],
     ['oignonsCaramelises', 'Oignons caramélisés', (cx, cy) => ECLATE.oignonsCaramelises(cx, cy, 50, 34)],
     ['oignonsFrits', 'Oignons frits', (cx, cy) => ECLATE.oignonsFrits(cx, cy, 50, 34)],
@@ -136,10 +129,13 @@ function clesUtilisees(produits) {
     return cles
 }
 
+const typeIcone = (cle) =>
+    cle.startsWith('sauce') || cle === 'ketchup' ? 'sauce' : cle.startsWith('pain') ? 'painHaut' : cle === 'cornichon' || cle === 'jalapeño' ? 'pieces' : cle
+
 function bandeauIngredients(produits) {
     const cles = clesUtilisees(produits)
     return CATALOGUE.filter(([cle]) => cles.has(cle))
-        .map(([, nom, dessin]) => `<div class="ing"><svg width="62" height="44">${DEFS}<g filter="url(#ombre)">${dessin(31, 22)}</g></svg><span>${nom}</span></div>`)
+        .map(([cle, nom, dessin]) => `<div class="ing"><svg width="62" height="44">${DEFS}<g filter="url(#ombre)">${avecFiltre(typeIcone(cle), dessin(31, 22))}</g></svg><span>${nom}</span></div>`)
         .join('')
 }
 

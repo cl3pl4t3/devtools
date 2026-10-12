@@ -4,17 +4,17 @@ const { COULEURS, alea, f } = require('./commun')
 const DESSINS = {
     painBurgerBas: { h: 22, l: 1, svg: (x, y, w, h) =>
         `<path d="M${x},${y} H${x + w} V${y + h - 9} Q${x + w},${y + h} ${x + w - 12},${y + h} H${x + 12} Q${x},${y + h} ${x},${y + h - 9} Z" fill="url(#brioche)" stroke="#8A5520" stroke-width="1"/>
-         <rect x="${x + 2}" y="${y}" width="${w - 4}" height="4" fill="#FBEFD6"/>` },
+         <rect x="${x + 2}" y="${y}" width="${w - 4}" height="4" fill="url(#mie)"/>` },
     painBurgerHaut: { h: 46, l: 1, svg: (x, y, w, h) =>
         `<path d="M${x},${y + h} V${y + h - 8} C${x},${y + 6} ${x + w * 0.2},${y} ${x + w / 2},${y} C${x + w * 0.8},${y} ${x + w},${y + 6} ${x + w},${y + h - 8} V${y + h} Z" fill="url(#brioche)" stroke="#8A5520" stroke-width="1"/>
-         <rect x="${x + 2}" y="${y + h - 4}" width="${w - 4}" height="4" fill="#FBEFD6"/>
+         <rect x="${x + 2}" y="${y + h - 4}" width="${w - 4}" height="4" fill="url(#mie)"/>
          <ellipse cx="${x + w * 0.36}" cy="${y + h * 0.3}" rx="${w * 0.16}" ry="${h * 0.1}" fill="#fff" opacity=".35"/>` },
     painSandwichBas: { h: 22, l: 1, svg: (x, y, w, h) =>
         `<path d="M${x + 6},${y} H${x + w - 6} Q${x + w + 4},${y + 2} ${x + w - 8},${y + h} H${x + 8} Q${x - 4},${y + 2} ${x + 6},${y} Z" fill="url(#croute)" stroke="#7A4A18" stroke-width="1"/>
-         <rect x="${x + 6}" y="${y}" width="${w - 12}" height="4" fill="#FBEFD6"/>` },
+         <rect x="${x + 6}" y="${y}" width="${w - 12}" height="4" fill="url(#mie)"/>` },
     painSandwichHaut: { h: 34, l: 1, svg: (x, y, w, h) => {
         let s = `<path d="M${x + 4},${y + h} C${x - 6},${y + h * 0.3} ${x + w * 0.1},${y} ${x + w * 0.25},${y} H${x + w * 0.75} C${x + w * 0.9},${y} ${x + w + 6},${y + h * 0.3} ${x + w - 4},${y + h} Z" fill="url(#croute)" stroke="#7A4A18" stroke-width="1"/>
-                 <rect x="${x + 6}" y="${y + h - 4}" width="${w - 12}" height="4" fill="#FBEFD6"/>`
+                 <rect x="${x + 6}" y="${y + h - 4}" width="${w - 12}" height="4" fill="url(#mie)"/>`
         for (let i = 1; i <= 5; i++) {
             const cx = x + (w * i) / 6
             s += `<path d="M${cx - 14},${y + h * 0.55} Q${cx},${y + 2} ${cx + 14},${y + h * 0.3}" stroke="#E9C88C" stroke-width="3" fill="none" stroke-linecap="round"/>`
@@ -65,19 +65,26 @@ const DESSINS = {
         return s
     } },
     cheddar: { h: 6, l: 1.0, svg: (x, y, w, h) => {
-        const g = x + 3, d = x + w - 3
-        return `<path d="M${x},${y} H${x + w} V${y + h} L${d},${y + h + 8} L${d - 6},${y + h} H${g + 6} L${g},${y + h + 9} L${x},${y + h} Z" fill="#F5A81C" stroke="#C47A06" stroke-width=".8"/>`
+        // tranche fondue : déborde un peu et coule en gouttes arrondies sur le steak du dessous
+        const goutte = (cx, l, lg) =>
+            `<path d="M${f(cx - lg)},${f(y + h - 1)} C${f(cx - lg)},${f(y + h + l * 0.7)} ${f(cx - lg * 0.6)},${f(y + h + l)} ${f(cx)},${f(y + h + l)} C${f(cx + lg * 0.6)},${f(y + h + l)} ${f(cx + lg)},${f(y + h + l * 0.7)} ${f(cx + lg)},${f(y + h - 1)} Z" fill="url(#fromage)"/>`
+        return `${goutte(x + 4, 7, 3.5)}${goutte(x + w * 0.3, 4, 3)}${goutte(x + w * 0.62, 6, 3.2)}${goutte(x + w - 5, 9, 3.6)}
+                <path d="M${x - 2},${y + 1} Q${x + w / 2},${y - 1.5} ${x + w + 2},${y + 1} L${x + w + 1},${y + h} Q${x + w / 2},${y + h + 1.5} ${x - 1},${y + h} Z" fill="url(#fromage)" stroke="#C47A06" stroke-width=".7"/>`
     } },
     salade: { h: 11, l: 1.06, svg: (x, y, w, h) => {
-        let d = `M${x},${y + h * 0.6}`
+        // feuille frisée qui dépasse : bord ondulé clair sur fond plus sombre
         const n = Math.round(w / 9)
-        for (let i = 0; i < n; i++) {
-            const x1 = x + (w * (i + 0.5)) / n, x2 = x + (w * (i + 1)) / n
-            d += ` Q${f(x1)},${i % 2 ? y - 2 : y + h + 2} ${f(x2)},${f(y + h * 0.5)}`
+        const bord = (dy, amp) => {
+            let d = `M${x},${f(y + h * 0.6 + dy)}`
+            for (let i = 0; i < n; i++) {
+                const x1 = x + (w * (i + 0.5)) / n, x2 = x + (w * (i + 1)) / n
+                d += ` Q${f(x1)},${f((i % 2 ? y - amp : y + h + amp) + dy)} ${f(x2)},${f(y + h * 0.5 + dy)}`
+            }
+            return d + ` L${x + w},${y + h} L${x},${y + h} Z`
         }
-        d += ` L${x + w},${y + h} L${x},${y + h} Z`
-        return `<path d="${d}" fill="#7DBE3A" stroke="#3E7A17" stroke-width="1"/>
-                <path d="M${x + 6},${y + h * 0.6} H${x + w - 6}" stroke="#C8E89A" stroke-width="1.2" opacity=".8"/>`
+        return `<path d="${bord(1.5, 1)}" fill="#3F7F18"/>
+                <path d="${bord(0, 2)}" fill="url(#feuille)" stroke="#3E7A17" stroke-width=".8"/>
+                <path d="M${x + 6},${y + h * 0.62} H${x + w - 6}" stroke="#E0F2BE" stroke-width="1.1" opacity=".85"/>`
     } },
     oignonsRouges: { h: 9, l: 0.88, svg: (x, y, w, h) => {
         let s = ''

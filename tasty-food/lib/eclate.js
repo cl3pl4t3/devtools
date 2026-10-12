@@ -23,12 +23,12 @@ const DESSINS = {
     painBas: (cx, cy, W, s) => {
         const rx = W / 2, ry = s * 0.2, ep = s * 0.42, y0 = cy - ep / 3
         return `<path d="M${f(cx - rx)},${f(y0)} C${f(cx - rx)},${f(y0 + ep * 1.25)} ${f(cx + rx)},${f(y0 + ep * 1.25)} ${f(cx + rx)},${f(y0)} Z" fill="url(#croute)" stroke="#8A5520" stroke-width="1"/>
-                <ellipse cx="${f(cx)}" cy="${f(y0)}" rx="${f(rx)}" ry="${f(ry)}" fill="#F7E3BC" stroke="#C9974F" stroke-width="1"/>`
+                <ellipse cx="${f(cx)}" cy="${f(y0)}" rx="${f(rx)}" ry="${f(ry)}" fill="url(#mie)" stroke="#C9974F" stroke-width="1"/>`
     },
     painHaut: (cx, cy, W, s, q, nom, baguette) => {
         const rx = W / 2, ry = s * 0.16, hd = baguette ? s * 0.62 : s * 0.85, yb = cy + s * 0.18
-        let o = `<ellipse cx="${f(cx)}" cy="${f(yb)}" rx="${f(rx)}" ry="${f(ry)}" fill="#F7E3BC" stroke="#C9974F" stroke-width="1"/>
-                 <path d="M${f(cx - rx)},${f(yb)} C${f(cx - rx)},${f(yb - hd * 1.3)} ${f(cx + rx)},${f(yb - hd * 1.3)} ${f(cx + rx)},${f(yb)} A${f(rx)},${f(ry)} 0 0 1 ${f(cx - rx)},${f(yb)} Z" fill="url(#croute)" stroke="#8A5520" stroke-width="1"/>`
+        let o = `<ellipse cx="${f(cx)}" cy="${f(yb)}" rx="${f(rx)}" ry="${f(ry)}" fill="url(#mie)" stroke="#C9974F" stroke-width="1"/>
+                 <path d="M${f(cx - rx)},${f(yb)} C${f(cx - rx)},${f(yb - hd * 1.3)} ${f(cx + rx)},${f(yb - hd * 1.3)} ${f(cx + rx)},${f(yb)} A${f(rx)},${f(ry)} 0 0 1 ${f(cx - rx)},${f(yb)} Z" fill="${baguette ? 'url(#croute)' : 'url(#brioche)'}" stroke="#8A5520" stroke-width="1"/>`
         if (baguette)
             for (let i = 1; i <= 4; i++) {
                 const x = cx - rx + (W * i) / 5
@@ -58,36 +58,68 @@ const DESSINS = {
         for (let i = 0; i < q; i++) {
             const x = cx - zone / 2 + pas * (i + 0.5)
             const y = cy + (q > 3 ? (i % 2 ? -s * 0.1 : s * 0.1) : 0)
-            o += `<ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(rx)}" ry="${f(ry)}" fill="${jal ? '#3E7D1E' : '#5C8A2E'}" stroke="${jal ? '#1E4A0C' : '#2F4F14'}" stroke-width="1.2"/>
-                  <ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(rx * 0.68)}" ry="${f(ry * 0.6)}" fill="${jal ? '#DCE9A8' : '#BFD472'}"/>`
-            if (jal) o += `<circle cx="${f(x - 2.5)}" cy="${f(y)}" r="1.1" fill="#fff"/><circle cx="${f(x + 2.5)}" cy="${f(y)}" r="1.1" fill="#fff"/>`
-            else o += `<circle cx="${f(x)}" cy="${f(y)}" r="1.4" fill="#7FA43C"/>`
+            // tranche épaisse : côté sombre puis face coupée
+            o += `<ellipse cx="${f(x)}" cy="${f(y + 1.8)}" rx="${f(rx)}" ry="${f(ry)}" fill="${jal ? '#1E4A0C' : '#2F5214'}"/>`
+            if (jal)
+                o += `<ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(rx)}" ry="${f(ry)}" fill="#3C8A1C" stroke="#1E4A0C" stroke-width="1"/>
+                      <ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(rx * 0.72)}" ry="${f(ry * 0.66)}" fill="#E4EFB8"/>
+                      <ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(rx * 0.3)}" ry="${f(ry * 0.3)}" fill="#F7F3D8" stroke="#C9D98A" stroke-width=".6"/>
+                      <circle cx="${f(x - rx * 0.32)}" cy="${f(y)}" r="1.1" fill="#FFFBEA"/><circle cx="${f(x + rx * 0.32)}" cy="${f(y)}" r="1.1" fill="#FFFBEA"/><circle cx="${f(x)}" cy="${f(y - ry * 0.4)}" r="1" fill="#FFFBEA"/>`
+            else {
+                o += `<ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(rx)}" ry="${f(ry)}" fill="url(#cornichon)" stroke="#2F4F14" stroke-width="1"/>`
+                for (let k = 0; k < 6; k++) {
+                    const a = (Math.PI * 2 * k) / 6
+                    o += `<ellipse cx="${f(x + Math.cos(a) * rx * 0.36)}" cy="${f(y + Math.sin(a) * ry * 0.36)}" rx="1.3" ry=".8" fill="#F2F5D6" opacity=".9"/>`
+                }
+            }
         }
         return o
     },
     steak: (cx, cy, W, s) => {
-        const rx = W * 0.46, ry = s * 0.2
-        let o = cylindre(cx, cy, rx, ry, s * 0.34, '#6E3C22', '#45230F', '#2A140A')
-        const yt = cy - s * 0.17
-        for (let i = 0; i < 26; i++) {
-            const a = alea() * Math.PI * 2, r = Math.sqrt(alea()) * 0.85
-            o += `<circle cx="${f(cx + Math.cos(a) * r * rx)}" cy="${f(yt + Math.sin(a) * r * ry)}" r="${f(0.8 + alea())}" fill="${alea() > 0.5 ? '#3B1C0C' : '#94583A'}"/>`
+        // galette de bœuf aux bords irréguliers, croûte saisie sur le dessus
+        const rx = W * 0.46, ry = s * 0.2, ep = s * 0.36
+        const yt = cy - ep / 2
+        let bord = '', dessus = ''
+        const N = 28
+        const r = []
+        for (let i = 0; i <= N; i++) r.push(1 + (alea() - 0.5) * 0.07)
+        r[N] = r[0]
+        for (let i = 0; i <= N; i++) {
+            const a = (Math.PI * 2 * i) / N
+            dessus += `${i ? 'L' : 'M'}${f(cx + Math.cos(a) * rx * r[i])},${f(yt + Math.sin(a) * ry * r[i])} `
+        }
+        for (let i = 0; i <= N / 2; i++) {
+            const a = (Math.PI * i) / (N / 2)
+            bord += `L${f(cx + Math.cos(a) * rx * r[i])},${f(yt + ep + Math.sin(a) * ry * r[i] + (alea() - 0.5) * 1.2)} `
+        }
+        let o = `<path d="M${f(cx + rx * r[0])},${f(yt)} ${bord} L${f(cx - rx * r[N / 2])},${f(yt)} Z" fill="url(#viande)" stroke="#241006" stroke-width=".8"/>`
+        o += `<path d="${dessus}Z" fill="url(#viandeDessus)" stroke="#2A140A" stroke-width=".8"/>`
+        for (let i = 0; i < 8; i++) {
+            const x = cx - rx * 0.7 + alea() * rx * 1.3, y = yt - ry * 0.5 + alea() * ry
+            o += `<path d="M${f(x)},${f(y)} q${f(3 + alea() * 4)},${f(-1.5)} ${f(7 + alea() * 6)},${f(0.5)}" stroke="#2A1206" stroke-width="1.3" fill="none" stroke-linecap="round" opacity=".75"/>`
         }
         return o
     },
     cheddar: (cx, cy, W, s) => {
-        // tranche carrée vue en plongée, coins qui fondent
+        // tranche carrée vue en plongée ; le fromage fondu coule le long des bords avant
         const a = W * 0.44, b = s * 0.24
-        return `<path d="M${f(cx - a)},${f(cy)} L${f(cx)},${f(cy - b)} L${f(cx + a)},${f(cy)} L${f(cx)},${f(cy + b)} Z" fill="#F5A81C" stroke="#C47A06" stroke-width="1"/>
-                <path d="M${f(cx - a)},${f(cy)} Q${f(cx - a - 2)},${f(cy + 8)} ${f(cx - a + 6)},${f(cy + 7)} L${f(cx - a + 9)},${f(cy + 2)} Z" fill="#F5A81C" stroke="#C47A06" stroke-width=".8"/>
-                <path d="M${f(cx + a)},${f(cy)} Q${f(cx + a + 2)},${f(cy + 9)} ${f(cx + a - 6)},${f(cy + 8)} L${f(cx + a - 9)},${f(cy + 2)} Z" fill="#F5A81C" stroke="#C47A06" stroke-width=".8"/>
-                <path d="M${f(cx - a * 0.5)},${f(cy - b * 0.3)} L${f(cx)},${f(cy - b * 0.8)}" stroke="#FFD27A" stroke-width="2" stroke-linecap="round"/>`
+        const goutte = (t, cote, l, lg) => {
+            const x = cx + cote * a * (1 - t), y = cy + b * t
+            return `<path d="M${f(x - lg)},${f(y - 1)} C${f(x - lg)},${f(y + l * 0.6)} ${f(x - lg * 0.7)},${f(y + l)} ${f(x)},${f(y + l)} C${f(x + lg * 0.7)},${f(y + l)} ${f(x + lg)},${f(y + l * 0.6)} ${f(x + lg)},${f(y - 1)} Z" fill="url(#fromage)"/>`
+        }
+        return `${goutte(0.42, -1, s * 0.22, 3.2)}${goutte(0.78, 1, s * 0.3, 3.6)}${goutte(0.3, 1, s * 0.16, 2.6)}
+                <path d="M${f(cx - a)},${f(cy)} Q${f(cx - a * 0.5)},${f(cy - b * 0.55)} ${f(cx)},${f(cy - b)} Q${f(cx + a * 0.5)},${f(cy - b * 0.45)} ${f(cx + a)},${f(cy + 1)} Q${f(cx + a * 0.5)},${f(cy + b * 0.6)} ${f(cx)},${f(cy + b + 1)} Q${f(cx - a * 0.5)},${f(cy + b * 0.5)} ${f(cx - a)},${f(cy)} Z" fill="url(#fromage)" stroke="#C47A06" stroke-width=".8"/>`
     },
     salade: (cx, cy, W, s) => {
-        const rx = W * 0.44, ry = s * 0.26
-        let o = `<path d="${contourOndule(cx, cy, rx, ry, 14, 0.1)}" fill="#7DBE3A" stroke="#3E7A17" stroke-width="1"/>`
-        o += `<path d="M${f(cx - rx * 0.75)},${f(cy)} H${f(cx + rx * 0.75)}" stroke="#D2EBA6" stroke-width="1.6"/>`
-        for (let i = -3; i <= 3; i++) o += `<path d="M${f(cx + i * rx * 0.2)},${f(cy)} l${f(rx * 0.08)},${f(-ry * 0.6)} M${f(cx + i * rx * 0.2)},${f(cy)} l${f(rx * 0.08)},${f(ry * 0.6)}" stroke="#B9DE85" stroke-width="1"/>`
+        // feuille frisée : fond plus sombre, dessus clair, nervures
+        const rx = W * 0.45, ry = s * 0.27
+        let o = `<path d="${contourOndule(cx, cy + 1.5, rx, ry, 18, 0.13)}" fill="#3F7F18"/>`
+        o += `<path d="${contourOndule(cx, cy, rx * 0.97, ry * 0.92, 15, 0.12)}" fill="url(#feuille)" stroke="#3E7A17" stroke-width=".7"/>`
+        o += `<path d="M${f(cx - rx * 0.8)},${f(cy + 1)} Q${f(cx)},${f(cy - ry * 0.25)} ${f(cx + rx * 0.8)},${f(cy + 1)}" stroke="#E4F4C4" stroke-width="1.6" fill="none"/>`
+        for (let i = -3; i <= 3; i++) {
+            const x = cx + i * rx * 0.21
+            o += `<path d="M${f(x)},${f(cy - ry * 0.05)} q${f(rx * 0.06)},${f(-ry * 0.4)} ${f(rx * 0.12)},${f(-ry * 0.65)} M${f(x)},${f(cy + ry * 0.05)} q${f(rx * 0.06)},${f(ry * 0.35)} ${f(rx * 0.12)},${f(ry * 0.6)}" stroke="#D3EDA8" stroke-width=".9" fill="none"/>`
+        }
         return o
     },
     oignonsRouges: (cx, cy, W, s) => {
